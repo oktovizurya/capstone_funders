@@ -245,7 +245,7 @@ class AuthController extends Controller
         ], 200);
     }
 
-    public function role() {
+    public function get_role() {
         $data = Role::get();
         return response()->json(compact('data'));
     }
