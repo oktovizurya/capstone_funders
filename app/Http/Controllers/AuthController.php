@@ -30,7 +30,7 @@ class AuthController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('jwt.verify', ['except' => ['login', 'register', 'get_role', 'get_all_user', 'refresh_token', 'get_provinsi_kabkota', 'get_all_provinsi', 'get_status']]);
+        $this->middleware('jwt.verify', ['except' => ['login', 'register', 'get_role', 'get_all_pengusaha', 'get_all_investor', 'refresh_token', 'get_provinsi_kabkota', 'get_all_provinsi', 'get_status']]);
     }
 
     /**
@@ -255,7 +255,7 @@ class AuthController extends Controller
         return response()->json(compact('data'));
     }
 
-    public function get_all_user() {
+    public function get_all_pengusaha() {
         $data = Profile::select('name', 'email', 'alamat', 'no_telp', 
         'id_role', 'role', 'id_status', 'status', 
         'id_provinsi', 'provinsi', 'id_kabkota', 'kabkota',
@@ -267,10 +267,27 @@ class AuthController extends Controller
         ->leftJoin('status', 'users.id_status', 'status.id')
         ->leftJoin('role', 'users.id_role', 'role.id')
         ->leftJoin('dataset', 'users.id', 'dataset.id_user')
+        ->where('id_role', 3)
         ->get();
-        // $data = User::select('name')
-        // ->leftJoin('profile', 'profile.id_user')
-        // ->get();
+        
+        return response()->json(compact('data'));
+    }
+
+    public function get_all_investor() {
+        $data = Profile::select('name', 'email', 'alamat', 'no_telp', 
+        'id_role', 'role', 'id_status', 'status', 
+        'id_provinsi', 'provinsi', 'id_kabkota', 'kabkota',
+        'fund_category', 'location', 'sector', 'range_fund', 
+        'range_year', 'range_employees', 'range_income', 'burn_rate')
+        ->leftJoin('users', 'profile.id_user', 'users.id')
+        ->leftJoin('kabkota', 'profile.id_kabkota', 'kabkota.id')
+        ->leftJoin('provinsi', 'kabkota.id_provinsi', 'provinsi.id')
+        ->leftJoin('status', 'users.id_status', 'status.id')
+        ->leftJoin('role', 'users.id_role', 'role.id')
+        ->leftJoin('dataset', 'users.id', 'dataset.id_user')
+        ->where('id_role', 2)
+        ->get();
+        
         return response()->json(compact('data'));
     }
 
