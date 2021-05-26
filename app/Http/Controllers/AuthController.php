@@ -58,6 +58,7 @@ class AuthController extends Controller
             'gambar' => 'mimes:jpg,jpeg,png|max:5048',
             'no_telp' => 'required',
             'id_role' => 'required',
+            'id_status' => 'required',
         ]);
 
         $email = Validator::make($request->all(), [
@@ -268,6 +269,7 @@ class AuthController extends Controller
         ->leftJoin('role', 'users.id_role', 'role.id')
         ->leftJoin('dataset', 'users.id', 'dataset.id_user')
         ->where('id_role', 3)
+        ->where('id_status', 1)
         ->get();
         
         return response()->json(compact('data'));
@@ -286,6 +288,7 @@ class AuthController extends Controller
         ->leftJoin('role', 'users.id_role', 'role.id')
         ->leftJoin('dataset', 'users.id', 'dataset.id_user')
         ->where('id_role', 2)
+        ->where('id_status', 1)
         ->get();
         
         return response()->json(compact('data'));
