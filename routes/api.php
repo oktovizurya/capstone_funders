@@ -20,7 +20,7 @@ Route::group([
 ], function ($router) {
     Route::post('/login', [App\Http\Controllers\AuthController ::class, 'login']);
     Route::post('/register', [App\Http\Controllers\AuthController ::class, 'register']);
-    Route::get('/role', [App\Http\Controllers\AuthController ::class, 'role']);
+    Route::get('/get_role', [App\Http\Controllers\AuthController ::class, 'get_role']);
     Route::get('/get_all_provinsi', [App\Http\Controllers\AuthController::class, 'get_all_provinsi']);
     Route::get('/get_provinsi_kabkota', [App\Http\Controllers\AuthController::class, 'get_provinsi_kabkota']);
     Route::get('/get_all_user', [App\Http\Controllers\AuthController::class, 'get_all_user']);

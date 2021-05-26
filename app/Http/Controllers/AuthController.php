@@ -30,7 +30,7 @@ class AuthController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('jwt.verify', ['except' => ['login', 'register', 'role', 'get_all_user', 'refresh_token', 'get_provinsi_kabkota', 'get_all_provinsi', 'status']]);
+        $this->middleware('jwt.verify', ['except' => ['login', 'register', 'get_role', 'get_all_user', 'refresh_token', 'get_provinsi_kabkota', 'get_all_provinsi', 'get_status']]);
     }
 
     /**
@@ -250,7 +250,7 @@ class AuthController extends Controller
         return response()->json(compact('data'));
     }
 
-    public function status() {
+    public function get_status() {
         $data = Status::get();
         return response()->json(compact('data'));
     }
