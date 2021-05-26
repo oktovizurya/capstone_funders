@@ -71,10 +71,10 @@ return [
             'model' => App\Models\User::class,
         ],
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+        'users_core' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\UserSett::class,
+        ],
     ],
 
     /*
@@ -95,6 +95,12 @@ return [
     'passwords' => [
         'users' => [
             'provider' => 'users',
+            'table' => 'password_resets',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+        'users_core' => [
+            'provider' => 'users_core',
             'table' => 'password_resets',
             'expire' => 60,
             'throttle' => 60,
