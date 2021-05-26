@@ -42,7 +42,7 @@ return [
         ],
 
         'api' => [
-            'driver' => 'token',
+            'driver' => 'jwt',
             'provider' => 'users',
             'hash' => false,
         ],
@@ -71,10 +71,10 @@ return [
             'model' => App\Models\User::class,
         ],
 
-        'users_core' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\UserSett::class,
-        ],
+        // 'users_core' => [
+        //     'driver' => 'eloquent',
+        //     'model' => App\Models\UserSett::class,
+        // ],
     ],
 
     /*
@@ -99,12 +99,12 @@ return [
             'expire' => 60,
             'throttle' => 60,
         ],
-        'users_core' => [
-            'provider' => 'users_core',
-            'table' => 'password_resets',
-            'expire' => 60,
-            'throttle' => 60,
-        ],
+        // 'users_core' => [
+        //     'provider' => 'users_core',
+        //     'table' => 'password_resets',
+        //     'expire' => 60,
+        //     'throttle' => 60,
+        // ],
     ],
 
     /*

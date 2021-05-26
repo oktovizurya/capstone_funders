@@ -11,6 +11,16 @@ use Illuminate\Support\Facades\Validator;
 use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
+use Redirect,Response,File, Storage;
+
+use App\Models\User;
+use App\Models\Profile;
+use App\Models\Role;
+use App\Models\Kabkota;
+use App\Models\Status;
+use App\Models\Dataset;
+use App\Models\Provinsi;
+
 class AuthController extends Controller
 {
     /**
@@ -20,7 +30,7 @@ class AuthController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('jwt.verify', ['except' => ['login', 'register', 'role', 'get_all_user', 'refresh_token', 'get_provinsi_kabkota', 'get_all_provinsi']]);
+        $this->middleware('jwt.verify', ['except' => ['login', 'register', 'role', 'get_all_user', 'refresh_token', 'get_provinsi_kabkota', 'get_all_provinsi', 'status']]);
     }
 
     /**
@@ -92,6 +102,10 @@ class AuthController extends Controller
                 'gambar' => basename($gambar),
             ]);
 
+            $dataset = Dataset::create([
+                'id_user' => $user->id,
+            ]);
+
             return response()->json([
                 'message' => 'Berhasil terdaftar'
             ], 200);
@@ -133,20 +147,31 @@ class AuthController extends Controller
 
         $user = User::where('id', auth('api')->user()->id)->first();
         $profile = Profile::where('id_user', auth('api')->user()->id)->first();
+        $dataset = Dataset::where('id_user', auth('api')->user()->id)->first();
 
+        if (!isset($profile->kabkota->kabkota)) {
+            $kabkota = NULL;
+            $provinsi = NULL;
+        } else {
+            $kabkota = $profile->kabkota->kabkota;
+            $provinsi = $profile->kabkota->provinsi->provinsi;
+        }
         return response()->json([
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
                 'email_verified_at' => $user->email_verified_at,
+                'id_role' => $user->id_role,
                 'role' => $user->role->role,
                 'status' => $user->status->status,
                 'no_telp' => $profile->no_telp,
                 'gambar' => $profile->gambar,
                 'alamat' => $profile->alamat,
                 'deskripsi' => $profile->deskripsi,
+                'provinsi' => $provinsi,
                 'kabkota' => $kabkota,
+                'dataset' => $dataset,
             ]
         ], 200);
     }
@@ -178,12 +203,8 @@ class AuthController extends Controller
 
             $profile_update = Profile::where('id', $profile->id)->update([
                 'no_telp' => $request->no_telp,
-                'jenis_kelamin' => $request->jenis_kelamin,
-                'tempat_lahir' => $request->tempat_lahir,
-                'tanggal_lahir' => $request->tanggal_lahir,
                 'deskripsi' => $request->deskripsi,
-                'id_provinsi' => $request->id_provinsi,
-                'id_kabkot' => $request->id_kabkot,
+                'id_kabkota' => $request->id_kabkota,
                 'alamat' => $request->alamat,
                 'gambar' => $gambar,
             ]);
@@ -193,13 +214,11 @@ class AuthController extends Controller
 
             return response()->json([
                 'message' => 'Berhasil di update',
-                'user' => $user,
-                'profile' => $profile,
             ], 200);
 
           } catch (\Illuminate\Database\QueryException $e) {
             $email = Validator::make($request->all(), [
-                'email' => 'unique:cms_users,email,'.$user->id
+                'email' => 'unique:users,email,'.$user->id
             ]);
             if($email->fails()){
                 return response()->json(['message' => 'Email sudah terdaftar'], 401);
@@ -208,18 +227,55 @@ class AuthController extends Controller
           }
     }
 
+    public function update_dataset(Request $request)
+    {
+        $dataset_update = Dataset::where('id', auth('api')->user()->id)->update([
+            'fund_category' => $request->fund_category,
+            'location' => $request->location,
+            'sector' => $request->sector,
+            'range_fund' => $request->range_fund,
+            'range_year' => $request->range_year,
+            'range_employees' => $request->range_employees,
+            'range_income' => $request->range_income,
+            'burn_rate' => $request->burn_rate,
+        ]);
+
+        return response()->json([
+            'message' => 'Berhasil di update'
+        ], 200);
+    }
+
     public function role() {
         $data = Role::get();
         return response()->json(compact('data'));
     }
 
+    public function status() {
+        $data = Status::get();
+        return response()->json(compact('data'));
+    }
+
     public function get_all_user() {
-        $data = User::get();
+        $data = Profile::select('name', 'email', 'alamat', 'no_telp', 
+        'id_role', 'role', 'id_status', 'status', 
+        'id_provinsi', 'provinsi', 'id_kabkota', 'kabkota',
+        'fund_category', 'location', 'sector', 'range_fund', 
+        'range_year', 'range_employees', 'range_income', 'burn_rate')
+        ->leftJoin('users', 'profile.id_user', 'users.id')
+        ->leftJoin('kabkota', 'profile.id_kabkota', 'kabkota.id')
+        ->leftJoin('provinsi', 'kabkota.id_provinsi', 'provinsi.id')
+        ->leftJoin('status', 'users.id_status', 'status.id')
+        ->leftJoin('role', 'users.id_role', 'role.id')
+        ->leftJoin('dataset', 'users.id', 'dataset.id_user')
+        ->get();
+        // $data = User::select('name')
+        // ->leftJoin('profile', 'profile.id_user')
+        // ->get();
         return response()->json(compact('data'));
     }
 
     public function get_all_provinsi() {
-        $data = Provinsi::where('is_balai', 0)->get();
+        $data = Provinsi::get();
         return response()->json(compact('data'));
     }
 

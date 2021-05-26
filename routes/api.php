@@ -14,6 +14,22 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+Route::group([
+    'middleware' => 'api',
+    'prefix' => 'auth'
+], function ($router) {
+    Route::post('/login', [App\Http\Controllers\AuthController ::class, 'login']);
+    Route::post('/register', [App\Http\Controllers\AuthController ::class, 'register']);
+    Route::get('/role', [App\Http\Controllers\AuthController ::class, 'role']);
+    Route::get('/get_all_provinsi', [App\Http\Controllers\AuthController::class, 'get_all_provinsi']);
+    Route::get('/get_provinsi_kabkota', [App\Http\Controllers\AuthController::class, 'get_provinsi_kabkota']);
+    Route::get('/get_all_user', [App\Http\Controllers\AuthController::class, 'get_all_user']);
+    Route::get('get_status', [App\Http\Controllers\AuthController::class, 'get_status']);
+
+    Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout']);
+    Route::post('/refresh_token', [App\Http\Controllers\AuthController::class, 'refresh_token']);
+    Route::get('/user_profile', [App\Http\Controllers\AuthController::class, 'user_profile']);
+
+    Route::post('/update_profile', [App\Http\Controllers\AuthController::class, 'update_profile']);
+    Route::post('/update_dataset', [App\Http\Controllers\AuthController::class, 'update_dataset']);
 });

@@ -23,6 +23,13 @@ class Dataset extends Model
         'range_income',
         'burn_rate',
     ];
+
+    protected $hidden = [
+        'id',
+        'id_user',
+        'created_at',
+        'updated_at',
+    ];
     
     public function user(): BelongsTo
     {
