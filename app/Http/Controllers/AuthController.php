@@ -55,8 +55,8 @@ class AuthController extends Controller
             'name' => 'required|string|between:2,100',
             'email' => 'required|string|email|max:100|unique:users',
             'password' => 'required|string|confirmed|min:6',
-            'gambar' => 'mimes:jpg,jpeg,png|max:5048',
-            'no_telp' => 'required',
+            // 'gambar' => 'mimes:jpg,jpeg,png|max:5048',
+            // 'no_telp' => 'required',
             'id_role' => 'required',
             'id_status' => 'required',
         ]);
@@ -89,28 +89,30 @@ class AuthController extends Controller
             return response()->json($validator->errors()->toJson(), 400);
         }
 
-        if ($gambar = $request->file('gambar')) {
+        if (isset($request->gambar)) {
             $gambar = $request->file('gambar')->store('uploads/profile', 'public');
-
-            $user = User::create(array_merge(
-                $validator->validated(),
-                ['password' => bcrypt($request->password)]
-            ));
-
-            $profile = Profile::create([
-                'id_user' => $user->id,
-                'no_telp' => $request->no_telp,
-                'gambar' => basename($gambar),
-            ]);
-
-            $dataset = Dataset::create([
-                'id_user' => $user->id,
-            ]);
-
-            return response()->json([
-                'message' => 'Berhasil terdaftar'
-            ], 200);
+        } else {
+            $gambar = NULL;
         }
+
+        $user = User::create(array_merge(
+            $validator->validated(),
+            ['password' => bcrypt($request->password)]
+        ));
+
+        $profile = Profile::create([
+            'id_user' => $user->id,
+            'no_telp' => $request->no_telp,
+            'gambar' => basename($gambar),
+        ]);
+
+        $dataset = Dataset::create([
+            'id_user' => $user->id,
+        ]);
+
+        return response()->json([
+            'message' => 'Berhasil terdaftar'
+        ], 200);
     }
 
     public function logout() {
