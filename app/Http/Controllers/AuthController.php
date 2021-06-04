@@ -403,7 +403,7 @@ class AuthController extends Controller
        try {
 
         $user = User::where('id', auth('api')->user()->id)->first();
-        $list = Recommendations::where('id_user', 6)->orderBy('id', 'ASC')->get();
+        $list = Recommendations::where('id_user', $user->id)->orderBy('id', 'ASC')->get();
         $data = [];
 
             foreach ($list as $value) {
