@@ -37,7 +37,7 @@ class AuthController extends Controller
     public function __construct()
     {
         $this->middleware('jwt.verify', ['except' => ['login', 'register', 'get_role', 'get_all_pengusaha', 'get_all_investor', 'refresh_token', 
-        'get_provinsi_kabkota', 'get_all_provinsi', 'get_status', 'get_kategori', 'get_range_fund', 'get_range_employee']]);
+        'get_provinsi_kabkota', 'get_all_provinsi', 'get_status', 'get_kategori', 'get_range_fund', 'get_range_employee', 'get_all_user']]);
     }
 
     /**
@@ -306,6 +306,31 @@ class AuthController extends Controller
             ->leftJoin('range_employees', 'dataset.id_range_employees', 'range_employees.id')
             ->where('users.id_role', 3)
             ->where('users.id_status', 1)
+            ->get();
+            
+            return response()->json(compact('data'));
+        } catch (QueryException $e) {
+            return response()->json(['message' => 'Data Error'], 500);
+        } catch (ModelNotFoundException $exception) {
+            return response()->json(['message' => 'Data Tidak Ditemukan'], 404);
+        }
+    }
+
+    public function get_all_user() {
+        try {
+            $data = Profile::select('users.id', 'name', 'email', 'alamat', 'no_telp', 
+            'status', 'provinsi.provinsi', 'kabkota',
+            'kategori', 'p_ds.provinsi as lokasi', 'range_fund', 'range_employee')
+            ->leftJoin('users', 'profile.id_user', 'users.id')
+            ->leftJoin('kabkota', 'profile.id_kabkota', 'kabkota.id')
+            ->leftJoin('provinsi', 'kabkota.id_provinsi', 'provinsi.id')
+            ->leftJoin('status', 'users.id_status', 'status.id')
+            ->leftJoin('role', 'users.id_role', 'role.id')
+            ->leftJoin('dataset', 'users.id', 'dataset.id_user')
+            ->leftJoin('kategori', 'dataset.id_kategori', 'kategori.id')
+            ->leftJoin('provinsi as p_ds', 'dataset.id_lokasi', 'p_ds.id')
+            ->leftJoin('range_funds', 'dataset.id_range_funds', 'range_funds.id')
+            ->leftJoin('range_employees', 'dataset.id_range_employees', 'range_employees.id')
             ->get();
             
             return response()->json(compact('data'));

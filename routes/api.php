@@ -28,6 +28,7 @@ Route::group([
     Route::get('/get_provinsi_kabkota', [App\Http\Controllers\AuthController::class, 'get_provinsi_kabkota']);
     Route::get('/get_all_pengusaha', [App\Http\Controllers\AuthController::class, 'get_all_pengusaha']);
     Route::get('/get_all_investor', [App\Http\Controllers\AuthController::class, 'get_all_investor']);
+    Route::get('/get_all_user', [App\Http\Controllers\AuthController::class, 'get_all_user']);
     Route::get('get_status', [App\Http\Controllers\AuthController::class, 'get_status']);
 
     Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout']);
