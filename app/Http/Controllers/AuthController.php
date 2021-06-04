@@ -319,7 +319,7 @@ class AuthController extends Controller
     public function get_all_user() {
         try {
             $data = Profile::select('users.id', 'name', 'email', 'alamat', 'no_telp', 
-            'status', 'provinsi.provinsi', 'kabkota',
+            'status', 'provinsi.provinsi', 'kabkota', 'role',
             'kategori', 'p_ds.provinsi as lokasi', 'range_fund', 'range_employee')
             ->leftJoin('users', 'profile.id_user', 'users.id')
             ->leftJoin('kabkota', 'profile.id_kabkota', 'kabkota.id')
