@@ -306,6 +306,7 @@ class AuthController extends Controller
             ->leftJoin('range_employees', 'dataset.id_range_employees', 'range_employees.id')
             ->where('users.id_role', 3)
             ->where('users.id_status', 1)
+            ->orderBy('users.id', 'ASC')
             ->get();
             
             return response()->json(compact('data'));
@@ -331,6 +332,7 @@ class AuthController extends Controller
             ->leftJoin('provinsi as p_ds', 'dataset.id_lokasi', 'p_ds.id')
             ->leftJoin('range_funds', 'dataset.id_range_funds', 'range_funds.id')
             ->leftJoin('range_employees', 'dataset.id_range_employees', 'range_employees.id')
+            ->orderBy('users.id', 'ASC')
             ->get();
             
             return response()->json(compact('data'));
@@ -359,6 +361,7 @@ class AuthController extends Controller
             ->leftJoin('range_employees', 'dataset.id_range_employees', 'range_employees.id')
             ->where('id_role', 2)
             ->where('id_status', 1)
+            ->orderBy('users.id', 'ASC')
             ->get();
             
             return response()->json(compact('data'));
