@@ -20,6 +20,10 @@ use App\Models\Kabkota;
 use App\Models\Status;
 use App\Models\Dataset;
 use App\Models\Provinsi;
+use App\Models\Kategori;
+use App\Models\RangeEmployees;
+use App\Models\RangeFunds;
+use App\Models\Recommendations;
 
 class AuthController extends Controller
 {
@@ -30,7 +34,8 @@ class AuthController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('jwt.verify', ['except' => ['login', 'register', 'get_role', 'get_all_pengusaha', 'get_all_investor', 'refresh_token', 'get_provinsi_kabkota', 'get_all_provinsi', 'get_status']]);
+        $this->middleware('jwt.verify', ['except' => ['login', 'register', 'get_role', 'get_all_pengusaha', 'get_all_investor', 'refresh_token', 
+        'get_provinsi_kabkota', 'get_all_provinsi', 'get_status', 'get_kategori', 'get_range_fund', 'get_range_employee']]);
     }
 
     /**
@@ -141,10 +146,9 @@ class AuthController extends Controller
     {
         return response()->json([
             'access_token' => $token,
-            'token_type' => 'bearer',
             'status' => 'ok',
-            'user' => auth('api')->user(),
-            'expires_in' => auth('api')->factory()->getTTL() * 60
+            'expires_in' => auth('api')->factory()->getTTL() * 60,
+            'user' => auth('api')->user()
         ]);
     }
 
@@ -154,29 +158,24 @@ class AuthController extends Controller
         $profile = Profile::where('id_user', auth('api')->user()->id)->first();
         $dataset = Dataset::where('id_user', auth('api')->user()->id)->first();
 
-        if (!isset($profile->kabkota->kabkota)) {
-            $kabkota = NULL;
-            $provinsi = NULL;
-        } else {
-            $kabkota = $profile->kabkota->kabkota;
-            $provinsi = $profile->kabkota->provinsi->provinsi;
-        }
         return response()->json([
             'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'email_verified_at' => $user->email_verified_at,
-                'id_role' => $user->id_role,
-                'role' => $user->role->role,
-                'status' => $user->status->status,
-                'no_telp' => $profile->no_telp,
-                'gambar' => $profile->gambar,
-                'alamat' => $profile->alamat,
-                'deskripsi' => $profile->deskripsi,
-                'provinsi' => $provinsi,
-                'kabkota' => $kabkota,
-                'dataset' => $dataset,
+                'name' => $user->name ?? '-',
+                'email' => $user->email ?? '-',
+                'role' => $user->role->role ?? '-',
+                'status' => $user->status->status ?? '-',
+                'no_telp' => $profile->no_telp ?? '-',
+                'gambar' => $profile->gambar ?? '-',
+                'alamat' => $profile->alamat ?? '-',
+                'deskripsi' => $profile->deskripsi ?? '-',
+                'provinsi' => $profile->kabkota->provinsi->provinsi ?? '',
+                'kabkota' => $profile->kabkota->kabkota ?? '-',
+                'dataset' => [
+                    'lokasi' => $dataset->lokasi->provinsi ?? '-',
+                    'kategori' => $dataset->kategori->kategori ?? '-',
+                    'range_fund' => $dataset->range_fund->range_fund ?? '-',
+                    'range_employee' => $dataset->range_employee->range_employee ?? '-'
+                ],
             ]
         ], 200);
     }
@@ -235,14 +234,10 @@ class AuthController extends Controller
     public function update_dataset(Request $request)
     {
         $dataset_update = Dataset::where('id', auth('api')->user()->id)->update([
-            'fund_category' => $request->fund_category,
-            'location' => $request->location,
-            'sector' => $request->sector,
-            'range_fund' => $request->range_fund,
-            'range_year' => $request->range_year,
-            'range_employees' => $request->range_employees,
-            'range_income' => $request->range_income,
-            'burn_rate' => $request->burn_rate,
+            'id_kategori' => $request->id_kategori,
+            'id_lokasi' => $request->id_lokasi,
+            'id_range_funds' => $request->id_range_funds,
+            'id_range_employees' => $request->id_range_employees,
         ]);
 
         return response()->json([
@@ -262,18 +257,20 @@ class AuthController extends Controller
 
     public function get_all_pengusaha() {
         $data = Profile::select('name', 'email', 'alamat', 'no_telp', 
-        'id_role', 'role', 'id_status', 'status', 
-        'id_provinsi', 'provinsi', 'id_kabkota', 'kabkota',
-        'fund_category', 'location', 'sector', 'range_fund', 
-        'range_year', 'range_employees', 'range_income', 'burn_rate')
+        'status', 'provinsi.provinsi', 'kabkota',
+        'kategori', 'p_ds.provinsi as lokasi', 'range_fund', 'range_employee')
         ->leftJoin('users', 'profile.id_user', 'users.id')
         ->leftJoin('kabkota', 'profile.id_kabkota', 'kabkota.id')
         ->leftJoin('provinsi', 'kabkota.id_provinsi', 'provinsi.id')
         ->leftJoin('status', 'users.id_status', 'status.id')
         ->leftJoin('role', 'users.id_role', 'role.id')
         ->leftJoin('dataset', 'users.id', 'dataset.id_user')
-        ->where('id_role', 3)
-        ->where('id_status', 1)
+        ->leftJoin('kategori', 'dataset.id_kategori', 'kategori.id')
+        ->leftJoin('provinsi as p_ds', 'dataset.id_lokasi', 'p_ds.id')
+        ->leftJoin('range_funds', 'dataset.id_range_funds', 'range_funds.id')
+        ->leftJoin('range_employees', 'dataset.id_range_employees', 'range_employees.id')
+        ->where('users.id_role', 3)
+        ->where('users.id_status', 1)
         ->get();
         
         return response()->json(compact('data'));
@@ -281,16 +278,18 @@ class AuthController extends Controller
 
     public function get_all_investor() {
         $data = Profile::select('name', 'email', 'alamat', 'no_telp', 
-        'id_role', 'role', 'id_status', 'status', 
-        'id_provinsi', 'provinsi', 'id_kabkota', 'kabkota',
-        'fund_category', 'location', 'sector', 'range_fund', 
-        'range_year', 'range_employees', 'range_income', 'burn_rate')
+        'status', 'provinsi.provinsi', 'kabkota',
+        'kategori', 'p_ds.provinsi as lokasi', 'range_fund', 'range_employee')
         ->leftJoin('users', 'profile.id_user', 'users.id')
         ->leftJoin('kabkota', 'profile.id_kabkota', 'kabkota.id')
         ->leftJoin('provinsi', 'kabkota.id_provinsi', 'provinsi.id')
         ->leftJoin('status', 'users.id_status', 'status.id')
         ->leftJoin('role', 'users.id_role', 'role.id')
         ->leftJoin('dataset', 'users.id', 'dataset.id_user')
+        ->leftJoin('kategori', 'dataset.id_kategori', 'kategori.id')
+        ->leftJoin('provinsi as p_ds', 'dataset.id_lokasi', 'p_ds.id')
+        ->leftJoin('range_funds', 'dataset.id_range_funds', 'range_funds.id')
+        ->leftJoin('range_employees', 'dataset.id_range_employees', 'range_employees.id')
         ->where('id_role', 2)
         ->where('id_status', 1)
         ->get();
@@ -307,5 +306,57 @@ class AuthController extends Controller
         $id = $request->id_provinsi;
         $data = Kabkota::where('id_provinsi', $id)->get();
         return response()->json(compact('data'));
+    }
+
+    public function get_kategori() {
+        $data = Kategori::get();
+        return response()->json(compact('data'));
+    }
+
+    public function get_range_fund() {
+        $data = RangeFunds::get();
+        return response()->json(compact('data'));
+    }
+
+    public function get_range_employee() {
+        $data = RangeEmployees::get();
+        return response()->json(compact('data'));
+    }
+
+    public function recommendation() {
+
+    $user = User::where('id', auth('api')->user()->id)->first();
+    $list = Recommendations::where('id_user', 6)->orderBy('id', 'ASC')->get();
+    $data = [];
+       try {
+
+            foreach ($list as $value) {
+                $list = [
+                    'name' => $value->rekomendasi->name ?? '-',
+                    'email' => $value->rekomendasi->email ?? '-',
+                    'role' => $value->rekomendasi->role->role ?? '-',
+                    'status' => $value->rekomendasi->status->status ?? '-',
+                    'no_telp' => $value->rekomendasi->profile->no_telp ?? '-',
+                    'gambar' => $value->rekomendasi->profile->gambar ?? '-',
+                    'alamat' => $value->rekomendasi->profile->alamat ?? '-',
+                    'deskripsi' => $value->rekomendasi->profile->deskripsi ?? '-',
+                    'provinsi' => $value->rekomendasi->profile->kabkota->provinsi->provinsi ?? '',
+                    'kabkota' => $$value->rekomendasi->profile->kabkota->kabkota ?? '-',
+                    'dataset' => [
+                        'lokasi' => $value->rekomendasi->dataset->lokasi->provinsi ?? '-',
+                        'kategori' => $value->rekomendasi->dataset->kategori->kategori ?? '-',
+                        'range_fund' => $value->rekomendasi->dataset->range_fund->range_fund ?? '-',
+                        'range_employee' => $value->rekomendasi->dataset->range_employee->range_employee ?? '-'
+                    ],
+                ];
+                array_push($data, $list);
+            }
+            
+            return response()->json([
+                'data' => $data
+            ], 200);
+        } catch (QueryException $e) {
+            return response()->json(['message' => 'Data Kosong'], 404);
+       }
     }
 }

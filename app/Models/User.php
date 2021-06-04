@@ -36,6 +36,9 @@ class User extends Authenticatable implements JWTSubject
      * @var array
      */
     protected $hidden = [
+        'id',
+        'id_status',
+        'id_role',
         'password',
         'remember_token',
         'email_verified_at',
@@ -85,5 +88,10 @@ class User extends Authenticatable implements JWTSubject
     public function dataset()
     {
         return $this->hasOne(Dataset::class, 'id_user');
+    }
+    
+    public function rekomendasi()
+    {
+        return $this->hasMany(Recommendations::class, 'id_user');
     }
 }

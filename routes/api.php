@@ -22,6 +22,9 @@ Route::group([
     Route::post('/register', [App\Http\Controllers\AuthController ::class, 'register']);
     Route::get('/get_role', [App\Http\Controllers\AuthController ::class, 'get_role']);
     Route::get('/get_all_provinsi', [App\Http\Controllers\AuthController::class, 'get_all_provinsi']);
+    Route::get('/get_kategori', [App\Http\Controllers\AuthController::class, 'get_kategori']);
+    Route::get('/get_range_fund', [App\Http\Controllers\AuthController::class, 'get_range_fund']);
+    Route::get('/get_range_employee', [App\Http\Controllers\AuthController::class, 'get_range_employee']);
     Route::get('/get_provinsi_kabkota', [App\Http\Controllers\AuthController::class, 'get_provinsi_kabkota']);
     Route::get('/get_all_pengusaha', [App\Http\Controllers\AuthController::class, 'get_all_pengusaha']);
     Route::get('/get_all_investor', [App\Http\Controllers\AuthController::class, 'get_all_investor']);
@@ -30,6 +33,7 @@ Route::group([
     Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout']);
     Route::post('/refresh_token', [App\Http\Controllers\AuthController::class, 'refresh_token']);
     Route::get('/user_profile', [App\Http\Controllers\AuthController::class, 'user_profile']);
+    Route::get('/recommendation', [App\Http\Controllers\AuthController::class, 'recommendation']);
 
     Route::post('/update_profile', [App\Http\Controllers\AuthController::class, 'update_profile']);
     Route::post('/update_dataset', [App\Http\Controllers\AuthController::class, 'update_dataset']);

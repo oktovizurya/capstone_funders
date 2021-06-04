@@ -14,14 +14,10 @@ class Dataset extends Model
 
     protected $fillable = [
         'id_user',
-        'fund_category',
-        'location',
-        'sector',
-        'range_fund',
-        'range_year',
-        'range_employees',
-        'range_income',
-        'burn_rate',
+        'id_lokasi',
+        'id_kategori',
+        'id_range_funds',
+        'id_range_employees'
     ];
 
     protected $hidden = [
@@ -31,8 +27,28 @@ class Dataset extends Model
         'updated_at',
     ];
     
-    public function user(): BelongsTo
+    public function user()
     {
         return $this->belongsTo(User::class, 'id_user', 'id');
+    }
+    
+    public function lokasi()
+    {
+        return $this->belongsTo(Provinsi::class, 'id_lokasi', 'id');
+    }
+    
+    public function kategori()
+    {
+        return $this->belongsTo(Kategori::class, 'id_kategori', 'id');
+    }
+    
+    public function range_fund()
+    {
+        return $this->belongsTo(RangeFunds::class, 'id_range_funds', 'id');
+    }
+    
+    public function range_employee()
+    {
+        return $this->belongsTo(RangeEmployees::class, 'id_range_employees', 'id');
     }
 }
