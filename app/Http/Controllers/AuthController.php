@@ -400,11 +400,11 @@ class AuthController extends Controller
     }
 
     public function recommendation() {
-
-    $user = User::where('id', auth('api')->user()->id)->first();
-    $list = Recommendations::where('id_user', 6)->orderBy('id', 'ASC')->get();
-    $data = [];
        try {
+
+        $user = User::where('id', auth('api')->user()->id)->first();
+        $list = Recommendations::where('id_user', 6)->orderBy('id', 'ASC')->get();
+        $data = [];
 
             foreach ($list as $value) {
                 $list = [
