@@ -170,6 +170,7 @@ class AuthController extends Controller
     
             return response()->json([
                 'user' => [
+                    'id' => $user->id ?? '-',
                     'name' => $user->name ?? '-',
                     'email' => $user->email ?? '-',
                     'role' => $user->role->role ?? '-',
@@ -290,7 +291,7 @@ class AuthController extends Controller
 
     public function get_all_pengusaha() {
         try {
-            $data = Profile::select('name', 'email', 'alamat', 'no_telp', 
+            $data = Profile::select('users.id', 'name', 'email', 'alamat', 'no_telp', 
             'status', 'provinsi.provinsi', 'kabkota',
             'kategori', 'p_ds.provinsi as lokasi', 'range_fund', 'range_employee')
             ->leftJoin('users', 'profile.id_user', 'users.id')
@@ -318,7 +319,7 @@ class AuthController extends Controller
     public function get_all_investor() {
 
         try {
-            $data = Profile::select('name', 'email', 'alamat', 'no_telp', 
+            $data = Profile::select('users.id', 'name', 'email', 'alamat', 'no_telp', 
             'status', 'provinsi.provinsi', 'kabkota',
             'kategori', 'p_ds.provinsi as lokasi', 'range_fund', 'range_employee')
             ->leftJoin('users', 'profile.id_user', 'users.id')
