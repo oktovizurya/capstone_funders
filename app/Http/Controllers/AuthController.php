@@ -56,68 +56,74 @@ class AuthController extends Controller
     }
 
     public function register(Request $request) {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|between:2,100',
-            'email' => 'required|string|email|max:100|unique:users',
-            'password' => 'required|string|confirmed|min:6',
-            // 'gambar' => 'mimes:jpg,jpeg,png|max:5048',
-            // 'no_telp' => 'required',
-            'id_role' => 'required',
-            'id_status' => 'required',
-        ]);
-
-        $email = Validator::make($request->all(), [
-            'email' => 'required|string|email|max:255|unique:users'
-        ]);
-
-        $password = Validator::make($request->all(), [
-            'password' => 'required|string|min:6|confirmed'
-        ]);
-
-        $gambar = Validator::make($request->all(), [
-            'gambar' => 'mimes:jpg,jpeg,png|max:5048'
-        ]);
-
-        if($email->fails()){
-             return response()->json(['message' => 'Email sudah terdaftar'], 401);
+        try {
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|between:2,100',
+                'email' => 'required|string|email|max:100|unique:users',
+                'password' => 'required|string|confirmed|min:6',
+                // 'gambar' => 'mimes:jpg,jpeg,png|max:5048',
+                // 'no_telp' => 'required',
+                'id_role' => 'required',
+                'id_status' => 'required',
+            ]);
+    
+            $email = Validator::make($request->all(), [
+                'email' => 'required|string|email|max:255|unique:users'
+            ]);
+    
+            $password = Validator::make($request->all(), [
+                'password' => 'required|string|min:6|confirmed'
+            ]);
+    
+            $gambar = Validator::make($request->all(), [
+                'gambar' => 'mimes:jpg,jpeg,png|max:5048'
+            ]);
+    
+            if($email->fails()){
+                 return response()->json(['message' => 'Email sudah terdaftar'], 401);
+            }
+    
+            if($password->fails()){
+                return response()->json(['message' => 'Password minimal 6 karakter dan harus sama dengan confirmation password'], 401);
+            }
+    
+            if($gambar->fails()){
+                return response()->json(['message' => 'Gambar tidak berekstensi jpg / jpeg / png atau lebih besar dari 5MB'], 401);
+            }
+    
+            if($validator->fails()){
+                return response()->json($validator->errors()->toJson(), 400);
+            }
+    
+            if (isset($request->gambar)) {
+                $gambar = $request->file('gambar')->store('uploads/profile', 'public');
+            } else {
+                $gambar = NULL;
+            }
+    
+            $user = User::create(array_merge(
+                $validator->validated(),
+                ['password' => bcrypt($request->password)]
+            ));
+    
+            $profile = Profile::create([
+                'id_user' => $user->id,
+                'no_telp' => $request->no_telp,
+                'gambar' => basename($gambar),
+            ]);
+    
+            $dataset = Dataset::create([
+                'id_user' => $user->id,
+            ]);
+    
+            return response()->json([
+                'message' => 'Berhasil terdaftar'
+            ], 200);
+        } catch (QueryException $e) {
+            return response()->json(['message' => 'Data Error'], 500);
+        } catch (ModelNotFoundException $exception) {
+            return response()->json(['message' => 'Data Tidak Ditemukan'], 404);
         }
-
-        if($password->fails()){
-            return response()->json(['message' => 'Password minimal 6 karakter dan harus sama dengan confirmation password'], 401);
-        }
-
-        if($gambar->fails()){
-            return response()->json(['message' => 'Gambar tidak berekstensi jpg / jpeg / png atau lebih besar dari 5MB'], 401);
-        }
-
-        if($validator->fails()){
-            return response()->json($validator->errors()->toJson(), 400);
-        }
-
-        if (isset($request->gambar)) {
-            $gambar = $request->file('gambar')->store('uploads/profile', 'public');
-        } else {
-            $gambar = NULL;
-        }
-
-        $user = User::create(array_merge(
-            $validator->validated(),
-            ['password' => bcrypt($request->password)]
-        ));
-
-        $profile = Profile::create([
-            'id_user' => $user->id,
-            'no_telp' => $request->no_telp,
-            'gambar' => basename($gambar),
-        ]);
-
-        $dataset = Dataset::create([
-            'id_user' => $user->id,
-        ]);
-
-        return response()->json([
-            'message' => 'Berhasil terdaftar'
-        ], 200);
     }
 
     public function logout() {
@@ -154,30 +160,37 @@ class AuthController extends Controller
 
     public function user_profile() {
 
-        $user = User::where('id', auth('api')->user()->id)->first();
-        $profile = Profile::where('id_user', auth('api')->user()->id)->first();
-        $dataset = Dataset::where('id_user', auth('api')->user()->id)->first();
+        try {
 
-        return response()->json([
-            'user' => [
-                'name' => $user->name ?? '-',
-                'email' => $user->email ?? '-',
-                'role' => $user->role->role ?? '-',
-                'status' => $user->status->status ?? '-',
-                'no_telp' => $profile->no_telp ?? '-',
-                'gambar' => $profile->gambar ?? '-',
-                'alamat' => $profile->alamat ?? '-',
-                'deskripsi' => $profile->deskripsi ?? '-',
-                'provinsi' => $profile->kabkota->provinsi->provinsi ?? '',
-                'kabkota' => $profile->kabkota->kabkota ?? '-',
-                'dataset' => [
-                    'lokasi' => $dataset->lokasi->provinsi ?? '-',
-                    'kategori' => $dataset->kategori->kategori ?? '-',
-                    'range_fund' => $dataset->range_fund->range_fund ?? '-',
-                    'range_employee' => $dataset->range_employee->range_employee ?? '-'
-                ],
-            ]
-        ], 200);
+            $user = User::where('id', auth('api')->user()->id)->first();
+            $profile = Profile::where('id_user', auth('api')->user()->id)->first();
+            $dataset = Dataset::where('id_user', auth('api')->user()->id)->first();
+    
+            return response()->json([
+                'user' => [
+                    'name' => $user->name ?? '-',
+                    'email' => $user->email ?? '-',
+                    'role' => $user->role->role ?? '-',
+                    'status' => $user->status->status ?? '-',
+                    'no_telp' => $profile->no_telp ?? '-',
+                    'gambar' => $profile->gambar ?? '-',
+                    'alamat' => $profile->alamat ?? '-',
+                    'deskripsi' => $profile->deskripsi ?? '-',
+                    'provinsi' => $profile->kabkota->provinsi->provinsi ?? '',
+                    'kabkota' => $profile->kabkota->kabkota ?? '-',
+                    'dataset' => [
+                        'lokasi' => $dataset->lokasi->provinsi ?? '-',
+                        'kategori' => $dataset->kategori->kategori ?? '-',
+                        'range_fund' => $dataset->range_fund->range_fund ?? '-',
+                        'range_employee' => $dataset->range_employee->range_employee ?? '-'
+                    ],
+                ]
+            ], 200);
+        } catch (QueryException $e) {
+            return response()->json(['message' => 'Data Error'], 500);
+        } catch (ModelNotFoundException $exception) {
+            return response()->json(['message' => 'Data Tidak Ditemukan'], 404);
+        }
     }
 
     public function update_profile(Request $request)
@@ -233,94 +246,155 @@ class AuthController extends Controller
 
     public function update_dataset(Request $request)
     {
-        $dataset_update = Dataset::where('id', auth('api')->user()->id)->update([
-            'id_kategori' => $request->id_kategori,
-            'id_lokasi' => $request->id_lokasi,
-            'id_range_funds' => $request->id_range_funds,
-            'id_range_employees' => $request->id_range_employees,
-        ]);
-
-        return response()->json([
-            'message' => 'Berhasil di update'
-        ], 200);
+        try {
+            $dataset_update = Dataset::where('id', auth('api')->user()->id)->update([
+                'id_kategori' => $request->id_kategori,
+                'id_lokasi' => $request->id_lokasi,
+                'id_range_funds' => $request->id_range_funds,
+                'id_range_employees' => $request->id_range_employees,
+            ]);
+    
+            return response()->json([
+                'message' => 'Berhasil di update'
+            ], 200);
+        } catch (QueryException $e) {
+            return response()->json(['message' => 'Data Error'], 500);
+        } catch (ModelNotFoundException $exception) {
+            return response()->json(['message' => 'Data Tidak Ditemukan'], 404);
+        }
     }
 
     public function get_role() {
-        $data = Role::get();
-        return response()->json(compact('data'));
+        try {
+            $data = Role::get();
+            return response()->json(compact('data'));
+        } catch (QueryException $e) {
+            return response()->json(['message' => 'Data Error'], 500);
+        } catch (ModelNotFoundException $exception) {
+            return response()->json(['message' => 'Data Tidak Ditemukan'], 404);
+        }
     }
 
     public function get_status() {
-        $data = Status::get();
-        return response()->json(compact('data'));
+        try {
+            $data = Status::get();
+            return response()->json(compact('data'));
+        } catch (QueryException $e) {
+            return response()->json(['message' => 'Data Error'], 500);
+        } catch (ModelNotFoundException $exception) {
+            return response()->json(['message' => 'Data Tidak Ditemukan'], 404);
+        }
     }
 
     public function get_all_pengusaha() {
-        $data = Profile::select('name', 'email', 'alamat', 'no_telp', 
-        'status', 'provinsi.provinsi', 'kabkota',
-        'kategori', 'p_ds.provinsi as lokasi', 'range_fund', 'range_employee')
-        ->leftJoin('users', 'profile.id_user', 'users.id')
-        ->leftJoin('kabkota', 'profile.id_kabkota', 'kabkota.id')
-        ->leftJoin('provinsi', 'kabkota.id_provinsi', 'provinsi.id')
-        ->leftJoin('status', 'users.id_status', 'status.id')
-        ->leftJoin('role', 'users.id_role', 'role.id')
-        ->leftJoin('dataset', 'users.id', 'dataset.id_user')
-        ->leftJoin('kategori', 'dataset.id_kategori', 'kategori.id')
-        ->leftJoin('provinsi as p_ds', 'dataset.id_lokasi', 'p_ds.id')
-        ->leftJoin('range_funds', 'dataset.id_range_funds', 'range_funds.id')
-        ->leftJoin('range_employees', 'dataset.id_range_employees', 'range_employees.id')
-        ->where('users.id_role', 3)
-        ->where('users.id_status', 1)
-        ->get();
-        
-        return response()->json(compact('data'));
+        try {
+            $data = Profile::select('name', 'email', 'alamat', 'no_telp', 
+            'status', 'provinsi.provinsi', 'kabkota',
+            'kategori', 'p_ds.provinsi as lokasi', 'range_fund', 'range_employee')
+            ->leftJoin('users', 'profile.id_user', 'users.id')
+            ->leftJoin('kabkota', 'profile.id_kabkota', 'kabkota.id')
+            ->leftJoin('provinsi', 'kabkota.id_provinsi', 'provinsi.id')
+            ->leftJoin('status', 'users.id_status', 'status.id')
+            ->leftJoin('role', 'users.id_role', 'role.id')
+            ->leftJoin('dataset', 'users.id', 'dataset.id_user')
+            ->leftJoin('kategori', 'dataset.id_kategori', 'kategori.id')
+            ->leftJoin('provinsi as p_ds', 'dataset.id_lokasi', 'p_ds.id')
+            ->leftJoin('range_funds', 'dataset.id_range_funds', 'range_funds.id')
+            ->leftJoin('range_employees', 'dataset.id_range_employees', 'range_employees.id')
+            ->where('users.id_role', 3)
+            ->where('users.id_status', 1)
+            ->get();
+            
+            return response()->json(compact('data'));
+        } catch (QueryException $e) {
+            return response()->json(['message' => 'Data Error'], 500);
+        } catch (ModelNotFoundException $exception) {
+            return response()->json(['message' => 'Data Tidak Ditemukan'], 404);
+        }
     }
 
     public function get_all_investor() {
-        $data = Profile::select('name', 'email', 'alamat', 'no_telp', 
-        'status', 'provinsi.provinsi', 'kabkota',
-        'kategori', 'p_ds.provinsi as lokasi', 'range_fund', 'range_employee')
-        ->leftJoin('users', 'profile.id_user', 'users.id')
-        ->leftJoin('kabkota', 'profile.id_kabkota', 'kabkota.id')
-        ->leftJoin('provinsi', 'kabkota.id_provinsi', 'provinsi.id')
-        ->leftJoin('status', 'users.id_status', 'status.id')
-        ->leftJoin('role', 'users.id_role', 'role.id')
-        ->leftJoin('dataset', 'users.id', 'dataset.id_user')
-        ->leftJoin('kategori', 'dataset.id_kategori', 'kategori.id')
-        ->leftJoin('provinsi as p_ds', 'dataset.id_lokasi', 'p_ds.id')
-        ->leftJoin('range_funds', 'dataset.id_range_funds', 'range_funds.id')
-        ->leftJoin('range_employees', 'dataset.id_range_employees', 'range_employees.id')
-        ->where('id_role', 2)
-        ->where('id_status', 1)
-        ->get();
-        
-        return response()->json(compact('data'));
+
+        try {
+            $data = Profile::select('name', 'email', 'alamat', 'no_telp', 
+            'status', 'provinsi.provinsi', 'kabkota',
+            'kategori', 'p_ds.provinsi as lokasi', 'range_fund', 'range_employee')
+            ->leftJoin('users', 'profile.id_user', 'users.id')
+            ->leftJoin('kabkota', 'profile.id_kabkota', 'kabkota.id')
+            ->leftJoin('provinsi', 'kabkota.id_provinsi', 'provinsi.id')
+            ->leftJoin('status', 'users.id_status', 'status.id')
+            ->leftJoin('role', 'users.id_role', 'role.id')
+            ->leftJoin('dataset', 'users.id', 'dataset.id_user')
+            ->leftJoin('kategori', 'dataset.id_kategori', 'kategori.id')
+            ->leftJoin('provinsi as p_ds', 'dataset.id_lokasi', 'p_ds.id')
+            ->leftJoin('range_funds', 'dataset.id_range_funds', 'range_funds.id')
+            ->leftJoin('range_employees', 'dataset.id_range_employees', 'range_employees.id')
+            ->where('id_role', 2)
+            ->where('id_status', 1)
+            ->get();
+            
+            return response()->json(compact('data'));
+        } catch (QueryException $e) {
+            return response()->json(['message' => 'Data Error'], 500);
+        } catch (ModelNotFoundException $exception) {
+            return response()->json(['message' => 'Data Tidak Ditemukan'], 404);
+        }
     }
 
     public function get_all_provinsi() {
-        $data = Provinsi::get();
-        return response()->json(compact('data'));
+        try {
+            $data = Provinsi::get();
+            return response()->json(compact('data'));
+        } catch (QueryException $e) {
+            return response()->json(['message' => 'Data Error'], 500);
+        } catch (ModelNotFoundException $exception) {
+            return response()->json(['message' => 'Data Tidak Ditemukan'], 404);
+        }
     }
 
     public function get_provinsi_kabkota(Request $request) {
-        $id = $request->id_provinsi;
-        $data = Kabkota::where('id_provinsi', $id)->get();
-        return response()->json(compact('data'));
+        try {
+            $id = $request->id_provinsi;
+            $data = Kabkota::where('id_provinsi', $id)->get();
+            return response()->json(compact('data'));
+        } catch (QueryException $e) {
+            return response()->json(['message' => 'Data Error'], 500);
+        } catch (ModelNotFoundException $exception) {
+            return response()->json(['message' => 'Data Tidak Ditemukan'], 404);
+        }
     }
 
     public function get_kategori() {
-        $data = Kategori::get();
-        return response()->json(compact('data'));
+        try {
+            $data = Kategori::get();
+            return response()->json(compact('data'));
+        } catch (QueryException $e) {
+            return response()->json(['message' => 'Data Error'], 500);
+        } catch (ModelNotFoundException $exception) {
+            return response()->json(['message' => 'Data Tidak Ditemukan'], 404);
+        }
     }
 
     public function get_range_fund() {
-        $data = RangeFunds::get();
-        return response()->json(compact('data'));
+        try {
+            $data = RangeFunds::get();
+            return response()->json(compact('data'));
+        } catch (QueryException $e) {
+            return response()->json(['message' => 'Data Error'], 500);
+        } catch (ModelNotFoundException $exception) {
+            return response()->json(['message' => 'Data Tidak Ditemukan'], 404);
+        }
     }
 
     public function get_range_employee() {
-        $data = RangeEmployees::get();
-        return response()->json(compact('data'));
+        try {
+            $data = RangeEmployees::get();
+            return response()->json(compact('data'));
+        } catch (QueryException $e) {
+            return response()->json(['message' => 'Data Error'], 500);
+        } catch (ModelNotFoundException $exception) {
+            return response()->json(['message' => 'Data Tidak Ditemukan'], 404);
+        }
     }
 
     public function recommendation() {
@@ -355,8 +429,11 @@ class AuthController extends Controller
             return response()->json([
                 'data' => $data
             ], 200);
+
         } catch (QueryException $e) {
-            return response()->json(['message' => 'Data Kosong'], 404);
-       }
+            return response()->json(['message' => 'Data Error'], 500);
+        } catch (ModelNotFoundException $exception) {
+            return response()->json(['message' => 'Data Tidak Ditemukan'], 404);
+        }
     }
 }
