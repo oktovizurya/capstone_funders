@@ -451,9 +451,7 @@ class AuthController extends Controller
                 array_push($data, $list);
             }
             
-            return response()->json([
-                $data
-            ], 200);
+            return response()->json(['data' => $data]);
 
         } catch (QueryException $e) {
             return response()->json(['message' => 'Data Error'], 500);
