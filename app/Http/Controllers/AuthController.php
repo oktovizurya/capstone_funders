@@ -180,13 +180,10 @@ class AuthController extends Controller
                     'deskripsi' => $profile->deskripsi ?? '-',
                     'provinsi' => $profile->kabkota->provinsi->provinsi ?? '',
                     'kabkota' => $profile->kabkota->kabkota ?? '-',
-                    'dataset' => [
-                        'lokasi' => $dataset->lokasi->provinsi ?? '-',
-                        'kategori' => $dataset->kategori->kategori ?? '-',
-                        'range_fund' => $dataset->range_fund->range_fund ?? '-',
-                        'range_employee' => $dataset->range_employee->range_employee ?? '-'
-                   
-                ]
+                    'lokasi' => $dataset->lokasi->provinsi ?? '-',
+                    'kategori' => $dataset->kategori->kategori ?? '-',
+                    'range_fund' => $dataset->range_fund->range_fund ?? '-',
+                    'range_employee' => $dataset->range_employee->range_employee ?? '-'
             ], 200);
         } catch (QueryException $e) {
             return response()->json(['message' => 'Data Error'], 500);
@@ -446,12 +443,10 @@ class AuthController extends Controller
                     'deskripsi' => $value->rekomendasi->profile->deskripsi ?? '-',
                     'provinsi' => $value->rekomendasi->profile->kabkota->provinsi->provinsi ?? '',
                     'kabkota' => $$value->rekomendasi->profile->kabkota->kabkota ?? '-',
-                    'dataset' => [
-                        'lokasi' => $value->rekomendasi->dataset->lokasi->provinsi ?? '-',
-                        'kategori' => $value->rekomendasi->dataset->kategori->kategori ?? '-',
-                        'range_fund' => $value->rekomendasi->dataset->range_fund->range_fund ?? '-',
-                        'range_employee' => $value->rekomendasi->dataset->range_employee->range_employee ?? '-'
-                    ],
+                    'lokasi' => $value->rekomendasi->dataset->lokasi->provinsi ?? '-',
+                    'kategori' => $value->rekomendasi->dataset->kategori->kategori ?? '-',
+                    'range_fund' => $value->rekomendasi->dataset->range_fund->range_fund ?? '-',
+                    'range_employee' => $value->rekomendasi->dataset->range_employee->range_employee ?? '-'
                 ];
                 array_push($data, $list);
             }
