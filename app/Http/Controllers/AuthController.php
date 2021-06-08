@@ -168,8 +168,7 @@ class AuthController extends Controller
             $profile = Profile::where('id_user', auth('api')->user()->id)->first();
             $dataset = Dataset::where('id_user', auth('api')->user()->id)->first();
     
-            return response()->json([
-                'user' => [
+            return response()->json( [
                     'id' => $user->id ?? '-',
                     'name' => $user->name ?? '-',
                     'email' => $user->email ?? '-',
@@ -186,7 +185,7 @@ class AuthController extends Controller
                         'kategori' => $dataset->kategori->kategori ?? '-',
                         'range_fund' => $dataset->range_fund->range_fund ?? '-',
                         'range_employee' => $dataset->range_employee->range_employee ?? '-'
-                    ],
+                   
                 ]
             ], 200);
         } catch (QueryException $e) {
@@ -458,7 +457,7 @@ class AuthController extends Controller
             }
             
             return response()->json([
-                'data' => $data
+                $data
             ], 200);
 
         } catch (QueryException $e) {
